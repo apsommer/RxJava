@@ -1,6 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
+
+    // must enforce this for rxjava
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     compileSdkVersion 29
 
     defaultConfig {
