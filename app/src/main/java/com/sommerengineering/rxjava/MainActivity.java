@@ -11,6 +11,7 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 
@@ -26,11 +27,31 @@ public class MainActivity extends AppCompatActivity {
         // create observable (listener)
         Observable<Task> observable = Observable
                 .fromIterable(DataSource.createTaskList())
-                .subscribeOn(Schedulers.io()) // do work on background thread managed by default Scheduler
+                .subscribeOn(Schedulers.io()) // get background thread from pool managed by Scheduler
+                .filter(new Predicate<Task>() { // operators execute on the subscribeOn background thread
+
+                    // filter
+                    @Override
+                    public boolean test(Task task) throws Throwable {
+
+                        // demonstrate this method is on the specified background thread
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        Log.d(TAG, "filter test: " + Thread.currentThread().getName());
+                        return true;
+                    }
+                })
                 .observeOn(AndroidSchedulers.mainThread()); // observe result on main UI thread (callback)
 
         // subscribe to observable emissions
         observable.subscribe(new Observer<Task>() {
+
+            // all methods execute on the main UI thread
+
             @Override
             public void onSubscribe(@NonNull Disposable d) {
                 Log.d(TAG, "onSubscribe");
@@ -38,8 +59,17 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onNext(@NonNull Task task) {
-                Log.d(TAG, "onNext");
+
+                // demonstrate this method is on the UI thread
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+
+                Log.d(TAG, "onNext: " + Thread.currentThread().getName());
                 Log.d(TAG, task.getDescription());
+
             }
 
             @Override
@@ -52,6 +82,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "onComplete: observable finished emitting");
             }
         });
-        
+
     }
 }
