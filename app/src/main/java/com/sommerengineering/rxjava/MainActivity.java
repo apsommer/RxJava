@@ -6,10 +6,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -19,10 +23,16 @@ public class MainActivity extends AppCompatActivity {
 
     public final String TAG = getClass().getSimpleName() + " ~~ ";
 
+    // all observers are disposal after they are no longer useful
+    CompositeDisposable disposables = new CompositeDisposable();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // subscribeOn: put this observable on this (typically background) thread, doing all operations here
+        // observeOn: observe this observable's emissions on this (typically main) thread
 
         // create observable (listener)
         Observable<Task> observable = Observable
@@ -47,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .observeOn(AndroidSchedulers.mainThread()); // observe result on main UI thread (callback)
 
+        // subscribe here is different than subscribeOn, this associates the observer (can be annonymous)
+        // to the observable
+
         // subscribe to observable emissions
         observable.subscribe(new Observer<Task>() {
 
@@ -54,7 +67,15 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSubscribe(@NonNull Disposable d) {
+
                 Log.d(TAG, "onSubscribe");
+
+                disposables.add(d);
+
+                Log.d(TAG, "disposable added");
+
+                // all observers are manually deleted in onDestroy()
+
             }
 
             @Override
@@ -82,6 +103,14 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "onComplete: observable finished emitting");
             }
         });
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // remove all observers (make them eligible for GC)
+        // this would be called in onCleared() of viewmodel
+        disposables.clear(); // .dispose() disables all future observations of these observables (hard clear)
     }
 }
