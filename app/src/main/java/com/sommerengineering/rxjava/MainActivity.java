@@ -12,7 +12,10 @@ import java.util.List;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableEmitter;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Predicate;
@@ -26,10 +29,55 @@ public class MainActivity extends AppCompatActivity {
     // all observers are disposal after they are no longer useful
     CompositeDisposable disposables = new CompositeDisposable();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    private void observeSingleObject() {
+
+        final Task task = new Task("Walk the dog", false, 3);
+
+        Observable<Task> taskObservable = Observable.create(new ObservableOnSubscribe<Task>() {
+
+            @Override
+            public void subscribe(@NonNull ObservableEmitter<Task> emitter) throws Throwable {
+
+                // emissions are defined here manually
+
+                if (!emitter.isDisposed()) {
+
+                    // emit once
+                    emitter.onNext(task);
+
+                    // emissions complete
+                    emitter.onComplete();
+                }
+            }
+        })
+        .subscribeOn(Schedulers.io()) // do work on background
+        .observeOn(AndroidSchedulers.mainThread()); // observe results on main
+
+        // subscribe() here calls subscribe() defined above
+        taskObservable.subscribe(new Observer<Task>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Task task) {
+                Log.d(TAG, "single object emission: " + task.getDescription());
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    private void observeIterable() {
 
         // subscribeOn: put this observable on this (typically background) thread, doing all operations here
         // observeOn: observe this observable's emissions on this (typically main) thread
@@ -106,6 +154,16 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "onComplete: observable finished emitting");
             }
         });
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        //
+        observeSingleObject();
+        observeIterable();
     }
 
     @Override
