@@ -34,6 +34,9 @@ public class MainActivity extends AppCompatActivity {
         // subscribeOn: put this observable on this (typically background) thread, doing all operations here
         // observeOn: observe this observable's emissions on this (typically main) thread
 
+        // common operators
+        // https://codingwithmitch.com/courses/rxjava-rxandroid-for-beginners/rxjava-operators/
+
         // create observable (listener)
         Observable<Task> observable = Observable
                 .fromIterable(DataSource.createTaskList())
