@@ -4,9 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -15,7 +13,6 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Predicate;
@@ -77,7 +74,61 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void observeIterable() {
+    /**
+     * Manually execute .fromIterable() operator
+     */
+    private void observeListObject() {
+
+        final List<Task> tasks = DataSource.createTaskList();
+
+        Observable<Task> taskObservable = Observable.create(new ObservableOnSubscribe<Task>() {
+
+            @Override
+            public void subscribe(@NonNull ObservableEmitter<Task> emitter) throws Throwable {
+
+                // emissions are defined here manually
+
+                if (!emitter.isDisposed()) {
+
+                    // loop through and emit each item in list
+                    for (Task task : tasks) {
+
+                        emitter.onNext(task);
+                    }
+
+                    // emissions complete
+                    emitter.onComplete();
+                }
+            }
+        })
+        .subscribeOn(Schedulers.io()) // do work on background
+        .observeOn(AndroidSchedulers.mainThread()); // observe results on main
+
+        // subscribe() here calls subscribe() defined above
+        taskObservable.subscribe(new Observer<Task>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Task task) {
+                Log.d(TAG, "single object in list emission: " + task.getDescription());
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    private void observeFromIterable() {
 
         // subscribeOn: put this observable on this (typically background) thread, doing all operations here
         // observeOn: observe this observable's emissions on this (typically main) thread
@@ -163,7 +214,8 @@ public class MainActivity extends AppCompatActivity {
 
         //
         observeSingleObject();
-        observeIterable();
+        observeFromIterable();
+        observeListObject();
     }
 
     @Override
