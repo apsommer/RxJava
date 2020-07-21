@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     // all observers are disposal after they are no longer useful
     CompositeDisposable disposables = new CompositeDisposable();
 
+    // emit a single object
     private void observeSingleObject() {
 
         final Task task = new Task("Walk the dog", false, 3);
@@ -74,9 +75,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Manually execute .fromIterable() operator
-     */
+    // emit objects in list manually
     private void observeListObject() {
 
         final List<Task> tasks = DataSource.createTaskList();
@@ -128,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // fromIterable() operator calls onNext() on each object automatically
     private void observeFromIterable() {
 
         // subscribeOn: put this observable on this (typically background) thread, doing all operations here
@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //
+        // emission examples
         observeSingleObject();
         observeFromIterable();
         observeListObject();
