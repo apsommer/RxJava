@@ -15,6 +15,7 @@ import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -56,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSubscribe(@NonNull Disposable d) {
 
+                Log.d(TAG, "onSubscribe");
+                disposables.add(d);
+                Log.d(TAG, "disposable added");
             }
 
             @Override
@@ -73,6 +77,20 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        // alternatively, "consumer" is another type of observer
+        disposables.add(taskObservable.subscribe(new Consumer<Task>() {
+
+            @Override
+            public void accept(Task task) throws Throwable {
+
+                Log.d(TAG, "consuming taskObservable ...");
+            }
+        }));
+
+        // An observer type that has an onSubscribe callback (Observer) exposes the disposable in
+        // that method. Alternatively, an observer type without the onSubscribe callback (Consumer)
+        // returns the disposable directly in the subscribe() association. All observers are disposable.
     }
 
     // emit objects in list manually
@@ -108,6 +126,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSubscribe(@NonNull Disposable d) {
 
+                Log.d(TAG, "onSubscribe");
+                disposables.add(d);
+                Log.d(TAG, "disposable added");
             }
 
             @Override
@@ -171,13 +192,10 @@ public class MainActivity extends AppCompatActivity {
             public void onSubscribe(@NonNull Disposable d) {
 
                 Log.d(TAG, "onSubscribe");
-
                 disposables.add(d);
-
                 Log.d(TAG, "disposable added");
 
                 // all observers are manually deleted in onDestroy()
-
             }
 
             @Override
