@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -370,7 +371,83 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void fromArray() {
 
+        Task[] list = new Task[5];
+
+        list[0] = (new Task("Take out the trash", true, 3));
+        list[1] = (new Task("Walk the dog", false, 2));
+        list[2] = (new Task("Make my bed", true, 1));
+        list[3] = (new Task("Unload the dishwasher", false, 0));
+        list[4] = (new Task("Make dinner", true, 5));
+
+        Observable<Task> taskObservable = Observable
+                .fromArray(list)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        taskObservable.subscribe(new Observer<Task>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(Task task) {
+                Log.d(TAG, "onNext: : " + task.getDescription());
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    private void fromCallable() {
+
+        // create Observable (method will not execute yet)
+        Observable<Task> callable = Observable
+                .fromCallable(new Callable<Task>() {
+                    @Override
+                    public Task call() throws Exception {
+
+                        // correct line commented below since this example file does not have Room/SQLite setup
+//                        return MyDatabase.getTask();
+                        return new Task("apples", true, 1);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        // method will be executed since now something has subscribed
+        callable.subscribe(new Observer<Task>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(Task task) {
+                Log.d(TAG, "onNext: : " + task.getDescription());
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -385,6 +462,8 @@ public class MainActivity extends AppCompatActivity {
         rangeOperatorWithMapAndTakeWhileAndRepeat(); // example of loop, repeat, and map
         intervalOperator(); // emit at specified intervals
         timerOperator(); // emit a single observable after specified delay
+        fromArray(); // same form and idea as fromIterable
+        fromCallable(); // very useful for db calls, returns result when complete
     }
 
     @Override
