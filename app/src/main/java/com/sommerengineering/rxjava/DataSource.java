@@ -15,6 +15,7 @@ public class DataSource {
         tasks.add(new Task("Wash dishes", true, 2));
         tasks.add(new Task("Learn RxJava", false, 1));
         tasks.add(new Task("Go to sleep", false, 4));
+        tasks.add(new Task("Go to sleep", false, 4)); // add a duplicate to test distinct()
 
         return tasks;
     }

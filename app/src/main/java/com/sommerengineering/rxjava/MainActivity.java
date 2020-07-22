@@ -572,6 +572,50 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void distinct() {
+
+        Observable<Task> taskObservable = Observable
+                .fromIterable(DataSource.createTaskList())
+                .distinct(new Function<Task, String>() {
+
+                    // this is similar to filter, however it considers uniqueness as the predicate
+                    // an object field (attribute) must be specified
+
+                    @Override
+                    public String apply(Task task) throws Throwable {
+
+                        // this means: emit task if it's description is unique, only one task
+                        // with for a given description will be omitted
+                        return task.getDescription();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        taskObservable.subscribe(new Observer<Task>() {
+
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Task task) {
+                Log.d(TAG, "onNext: distinct ... " + task.getDescription());
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -596,7 +640,8 @@ public class MainActivity extends AppCompatActivity {
 //        fromRetrofitUsingFlowableLiveData();
 
         // more operators
-        filter();
+//        filter();
+        distinct(); // use this on multiple UI clicks on same button
 
     }
 
