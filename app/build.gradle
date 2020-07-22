@@ -41,4 +41,11 @@ dependencies {
 
     // rxandroid depends on rxjava but is not guaranteed to have its latest version
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
+
+    // retrofit
+    implementation "com.squareup.retrofit2:retrofit:2.9.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+
+    // rxjava call adapter for retrofit
+    implementation "com.squareup.retrofit2:adapter-rxjava2:2.9.0"
 }
