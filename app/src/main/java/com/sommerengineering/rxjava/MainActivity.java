@@ -13,6 +13,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
@@ -28,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     CompositeDisposable disposables = new CompositeDisposable();
 
     // emit a single object
-    private void observeSingleObject() {
+    private void createObservable() {
 
         final Task task = new Task("Walk the dog", false, 3);
 
@@ -94,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // emit objects in list manually
-    private void observeListObject() {
+    private void createObservableFromList() {
 
         final List<Task> tasks = DataSource.createTaskList();
 
@@ -109,7 +110,6 @@ public class MainActivity extends AppCompatActivity {
 
                     // loop through and emit each item in list
                     for (Task task : tasks) {
-
                         emitter.onNext(task);
                     }
 
@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // fromIterable() operator calls onNext() on each object automatically
-    private void observeFromIterable() {
+    private void fromIterable() {
 
         // subscribeOn: put this observable on this (typically background) thread, doing all operations here
         // observeOn: observe this observable's emissions on this (typically main) thread
@@ -225,15 +225,80 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //
+    private void justOperator() {
+
+        final Task task = new Task("Walk the dog", false, 3);
+
+        Observable<Task> taskObservable = Observable
+                .just(task)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        taskObservable.subscribe(new Observer<Task>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Task task) {
+                Log.d(TAG, "onNext");
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    private void rangeOperator() {
+
+        Observable<Integer> observable = Observable
+                .range(0, 9) // (a,b]
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        observable.subscribe(new Observer<Integer>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Integer integer) {
+                Log.d(TAG, "onNext: " + integer);
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // emission examples
-        observeSingleObject();
-        observeFromIterable();
-        observeListObject();
+        // examples
+        createObservable();
+        createObservableFromList();
+        fromIterable();
+        justOperator();
+        rangeOperator();
     }
 
     @Override
