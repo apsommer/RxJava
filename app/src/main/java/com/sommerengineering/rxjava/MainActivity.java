@@ -454,8 +454,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // create view model
-    MainViewModel viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-    
+    MainViewModel viewModel;
+
     private void fromRetrofitUsingFutureObservable() {
 
         // get data using executor/future
@@ -525,6 +525,53 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void filter() {
+
+        Observable<Task> taskObservable = Observable
+                .fromIterable(DataSource.createTaskList())
+                .filter(new Predicate<Task>() {
+
+                    @Override
+                    public boolean test(Task task) throws Throwable {
+
+                        // only tasks that meet this test will be emitted
+
+                        if(task.getDescription().equals("Wash dishes")) {
+                            return true;
+                        }
+                        return false;
+
+                        // or for example use the task boolean attribute directly
+//                        return task.isComplete();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        taskObservable.subscribe(new Observer<Task>() {
+
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Task task) {
+                Log.d(TAG, "onNext: filter ... " + task.getDescription());
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -544,8 +591,13 @@ public class MainActivity extends AppCompatActivity {
 //        fromCallable(); // very useful for db calls, returns result when complete
 
         // MVVM - Retrofit - RxJava
-        fromRetrofitUsingFutureObservable();
-        fromRetrofitUsingFlowableLiveData();
+//        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+//        fromRetrofitUsingFutureObservable();
+//        fromRetrofitUsingFlowableLiveData();
+
+        // more operators
+        filter();
+
     }
 
     @Override
