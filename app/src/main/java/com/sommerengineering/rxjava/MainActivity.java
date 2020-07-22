@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
@@ -225,7 +226,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //
     private void justOperator() {
 
         final Task task = new Task("Walk the dog", false, 3);
@@ -303,17 +303,88 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void intervalOperator() {
+
+        Observable<Long> observable = Observable
+                .interval(1, TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
+                .takeWhile(new Predicate<Long>() {
+                    @Override
+                    public boolean test(Long aLong) throws Throwable {
+                        Log.d(TAG, "test: " + aLong + ", thread: " + Thread.currentThread().getName());
+                        return aLong <= 5;
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread());
+
+        observable.subscribe(new Observer<Long>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Long aLong) {
+                Log.d(TAG, "onNext: " + aLong);
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    private void timerOperator() {
+
+        Observable<Long> observable = Observable
+                .timer(3, TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        observable.subscribe(new Observer<Long>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Long aLong) {
+                Log.d(TAG, "onNext: " + aLong);
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         // examples
-        createObservable();
-        createObservableFromList();
-        fromIterableWithFilter();
-        justOperator();
-        rangeOperatorWithMapAndTakeWhileAndRepeat();
+        createObservable(); // most flexible operator, complete control over emissions
+        createObservableFromList(); // extending the single case above
+        fromIterableWithFilter(); // operator exists to handle manual case above
+        justOperator(); // emit just one observable (or list < 10 items)
+        rangeOperatorWithMapAndTakeWhileAndRepeat(); // example of loop, repeat, and map
+        intervalOperator(); // emit at specified intervals
+        timerOperator(); // emit a single observable after specified delay
     }
 
     @Override
