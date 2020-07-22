@@ -13,10 +13,10 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // fromIterable() operator calls onNext() on each object automatically
-    private void fromIterable() {
+    private void fromIterableWithFilter() {
 
         // subscribeOn: put this observable on this (typically background) thread, doing all operations here
         // observeOn: observe this observable's emissions on this (typically main) thread
@@ -258,22 +258,36 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void rangeOperator() {
+    private void rangeOperatorWithMapAndTakeWhile() {
 
-        Observable<Integer> observable = Observable
+        Observable<Task> observable = Observable
                 .range(0, 9) // (a,b]
                 .subscribeOn(Schedulers.io())
+                .map(new Function<Integer, Task>() {
+
+                    @Override
+                    public Task apply(Integer integer) throws Throwable {
+                        Log.d(TAG, "thread: " + Thread.currentThread().getName());
+                        return new Task("new task with priority: " + integer, false, integer);
+                    }
+                })
+                .takeWhile(new Predicate<Task>() {
+                    @Override
+                    public boolean test(Task task) throws Throwable {
+                        return task.getPriority() < 9;
+                    }
+                })
                 .observeOn(AndroidSchedulers.mainThread());
 
-        observable.subscribe(new Observer<Integer>() {
+        observable.subscribe(new Observer<Task>() {
             @Override
             public void onSubscribe(@NonNull Disposable d) {
 
             }
 
             @Override
-            public void onNext(@NonNull Integer integer) {
-                Log.d(TAG, "onNext: " + integer);
+            public void onNext(@NonNull Task task) {
+                Log.d(TAG, "onNext: " + task.getPriority());
             }
 
             @Override
@@ -296,9 +310,9 @@ public class MainActivity extends AppCompatActivity {
         // examples
         createObservable();
         createObservableFromList();
-        fromIterable();
+        fromIterableWithFilter();
         justOperator();
-        rangeOperator();
+        rangeOperatorWithMapAndTakeWhile();
     }
 
     @Override
