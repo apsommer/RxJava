@@ -47,8 +47,11 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:2.9.0"
 
     // rxjava call adapter for retrofit
-    implementation "com.squareup.retrofit2:adapter-rxjava3:2.9.0"
+    // By default, you can't return an Observable or a Flowable from a Retrofit request.
+    // This dependency will allow you to convert Retrofit Call objects to Flowables / Observables.
+    implementation "com.squareup.retrofit2:adapter-rxjava3:2.9.0" // must be rxjava3!
 
+    // jetpack viewmodel
     implementation "androidx.lifecycle:lifecycle-viewmodel:2.2.0"
 //    implementation "androidx.lifecycle:lifecycle-livedata:2.2.0"
 }

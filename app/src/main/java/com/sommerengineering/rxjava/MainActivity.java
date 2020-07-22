@@ -1,9 +1,7 @@
 package com.sommerengineering.rxjava;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelStoreOwner;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -455,9 +453,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void retrofit() {
+    private void fromRetrofit() {
 
-        Log.d(TAG, "hello");
+        // create view model
         MainViewModel viewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         try {
@@ -465,6 +463,8 @@ public class MainActivity extends AppCompatActivity {
             viewModel.makeFutureQuery().get()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
+
+                    // this method triggers the future to be called
                     .subscribe(new Observer<ResponseBody>() {
 
                         @Override
@@ -517,7 +517,7 @@ public class MainActivity extends AppCompatActivity {
 //        fromArray(); // same form and idea as fromIterable
 //        fromCallable(); // very useful for db calls, returns result when complete
 
-        retrofit();
+        fromRetrofit(); // MVVM - Retrofit - RxJava
     }
 
     @Override
