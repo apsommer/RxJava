@@ -453,11 +453,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void fromRetrofit() {
+    // create view model
+    MainViewModel viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+    
+    private void fromRetrofitUsingFutureObservable() {
 
-        // create view model
-        MainViewModel viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-
+        // get data using executor/future
         try {
 
             viewModel.makeFutureQuery().get()
@@ -499,6 +500,29 @@ public class MainActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+    }
+
+    // the following method performs the same action as above using far less code
+    private void fromRetrofitUsingFlowableLiveData() {
+
+        // get data using flowable/livedata
+        viewModel.makeFlowableQuery().observe(this, new androidx.lifecycle.Observer<ResponseBody>() {
+
+            // must less exposure on livedata (androidx) observer vs. rxjava3 observer
+            // onChanged vs. onSubscribed, onNext, onError, onComplete
+            // livedata has .observe() in contrast to full observable .subscribe()
+
+            @Override
+            public void onChanged(ResponseBody responseBody) {
+                Log.d(TAG, "LiveData onChanged called.");
+                try {
+                    Log.d(TAG, responseBody.string());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @Override
@@ -506,7 +530,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // examples
+        // basic operator examples
 //        createObservable(); // most flexible operator, complete control over emissions
 //        createObservableFromList(); // extending the single case above
 //        fromIterableWithFilter(); // operator exists to handle manual case above
@@ -515,9 +539,13 @@ public class MainActivity extends AppCompatActivity {
 //        intervalOperator(); // emit at specified intervals
 //        timerOperator(); // emit a single observable after specified delay
 //        fromArray(); // same form and idea as fromIterable
+
+        // Room - SQLite
 //        fromCallable(); // very useful for db calls, returns result when complete
 
-        fromRetrofit(); // MVVM - Retrofit - RxJava
+        // MVVM - Retrofit - RxJava
+        fromRetrofitUsingFutureObservable();
+        fromRetrofitUsingFlowableLiveData();
     }
 
     @Override

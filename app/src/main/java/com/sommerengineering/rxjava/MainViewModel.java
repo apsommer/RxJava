@@ -1,5 +1,6 @@
 package com.sommerengineering.rxjava;
 
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 import java.util.concurrent.Future;
 import io.reactivex.rxjava3.core.Observable;
@@ -16,5 +17,10 @@ public class MainViewModel extends ViewModel {
     // called by activity
     public Future<Observable<ResponseBody>> makeFutureQuery() {
         return repository.makeFutureQuery();
+    }
+
+    // called by activity
+    public LiveData<ResponseBody> makeFlowableQuery() {
+        return repository.makeReactiveQuery();
     }
 }

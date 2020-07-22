@@ -51,7 +51,8 @@ dependencies {
     // This dependency will allow you to convert Retrofit Call objects to Flowables / Observables.
     implementation "com.squareup.retrofit2:adapter-rxjava3:2.9.0" // must be rxjava3!
 
-    // jetpack viewmodel
-    implementation "androidx.lifecycle:lifecycle-viewmodel:2.2.0"
-//    implementation "androidx.lifecycle:lifecycle-livedata:2.2.0"
+    // jetpack androidx
+    implementation "androidx.lifecycle:lifecycle-viewmodel:2.2.0" // viewmodel
+    implementation "androidx.lifecycle:lifecycle-livedata:2.2.0" // livedata
+    implementation "androidx.lifecycle:lifecycle-reactivestreams:2.2.0" // convert between livedata <--> flowable/publisher
 }

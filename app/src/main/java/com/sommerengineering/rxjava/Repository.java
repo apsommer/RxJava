@@ -2,6 +2,9 @@ package com.sommerengineering.rxjava;
 
 import android.util.Log;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.LiveDataReactiveStreams;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -11,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import okhttp3.ResponseBody;
 
 public class Repository {
@@ -85,5 +89,16 @@ public class Repository {
                 return executor.submit(callable).get(timeout, timeUnit);
             }
         };
+    }
+
+    // the following method performs the same action as above using far less code
+    // above, an executor is setup to make a future call
+    // below, LiveDataReactiveStreams takes care of the "executor and future" by wrapping the result in livedata
+
+    // execute the endpoint query and return livedata to caller
+    public LiveData<ResponseBody> makeReactiveQuery() {
+        return LiveDataReactiveStreams.fromPublisher(ServiceGenerator.getRequestApi()
+                .makeFlowableQuery()
+                .subscribeOn(Schedulers.io()));
     }
 }
