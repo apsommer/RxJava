@@ -1,5 +1,7 @@
 package com.sommerengineering.rxjava;
 
+import android.util.Log;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -43,8 +45,10 @@ public class Repository {
             }
         };
 
-        // create the future observable, this does not actually make the call, only sets it up
-        final Future<Observable<ResponseBody>> futureObservable = new Future<Observable<ResponseBody>> () {
+        // create the future observable, this does not actually make the call only sets it up for expected future call
+        return new Future<Observable<ResponseBody>> () {
+
+            // following methods clean up the executor as needed
 
             @Override
             public boolean cancel(boolean mayInterruptIfRunning) {
@@ -66,9 +70,11 @@ public class Repository {
                 return executor.isTerminated();
             }
 
-            // next two methods are the key: when this future observable is observed (in viewmodel)
-            // only then the executor will execute, via one of these methods, which points to the
-            // callable observable created above, which makes the endpoint call.
+            // next two methods are the key: when this future observable is observed (in viewmodel
+            // when subscribe is called) only then the executor will execute, via one of these
+            // methods, which points to the callable observable created above, which makes the
+            // endpoint call.
+
             @Override
             public Observable<ResponseBody> get() throws ExecutionException, InterruptedException {
                 return executor.submit(callable).get();
@@ -79,7 +85,5 @@ public class Repository {
                 return executor.submit(callable).get(timeout, timeUnit);
             }
         };
-
-        return futureObservable;
     }
 }

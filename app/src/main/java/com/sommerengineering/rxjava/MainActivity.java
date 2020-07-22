@@ -1,12 +1,17 @@
 package com.sommerengineering.rxjava;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelStoreOwner;
 
 import android.os.Bundle;
 import android.util.Log;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -21,6 +26,7 @@ import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import okhttp3.ResponseBody;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -449,21 +455,69 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void retrofit() {
+
+        Log.d(TAG, "hello");
+        MainViewModel viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+
+        try {
+
+            viewModel.makeFutureQuery().get()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<ResponseBody>() {
+
+                        @Override
+                        public void onSubscribe(@NonNull Disposable d) {
+                            Log.d(TAG, "onSubscribe called.");
+                        }
+
+                        @Override
+                        public void onNext(@NonNull ResponseBody responseBody) {
+                            Log.d(TAG, "onNext called.");
+                            try {
+                                Log.d(TAG, responseBody.string());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        @Override
+                        public void onError(@NonNull Throwable e) {
+                            Log.e(TAG, "onError: ", e);
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            Log.d(TAG, "onComplete called.");
+                        }
+                    });
+
+        // executor throwables
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         // examples
-        createObservable(); // most flexible operator, complete control over emissions
-        createObservableFromList(); // extending the single case above
-        fromIterableWithFilter(); // operator exists to handle manual case above
-        justOperator(); // emit just one observable (or list < 10 items)
-        rangeOperatorWithMapAndTakeWhileAndRepeat(); // example of loop, repeat, and map
-        intervalOperator(); // emit at specified intervals
-        timerOperator(); // emit a single observable after specified delay
-        fromArray(); // same form and idea as fromIterable
-        fromCallable(); // very useful for db calls, returns result when complete
+//        createObservable(); // most flexible operator, complete control over emissions
+//        createObservableFromList(); // extending the single case above
+//        fromIterableWithFilter(); // operator exists to handle manual case above
+//        justOperator(); // emit just one observable (or list < 10 items)
+//        rangeOperatorWithMapAndTakeWhileAndRepeat(); // example of loop, repeat, and map
+//        intervalOperator(); // emit at specified intervals
+//        timerOperator(); // emit a single observable after specified delay
+//        fromArray(); // same form and idea as fromIterable
+//        fromCallable(); // very useful for db calls, returns result when complete
+
+        retrofit();
     }
 
     @Override
