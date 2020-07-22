@@ -258,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void rangeOperatorWithMapAndTakeWhile() {
+    private void rangeOperatorWithMapAndTakeWhileAndRepeat() {
 
         Observable<Task> observable = Observable
                 .range(0, 9) // (a,b]
@@ -277,6 +277,7 @@ public class MainActivity extends AppCompatActivity {
                         return task.getPriority() < 9;
                     }
                 })
+                .repeat(3)
                 .observeOn(AndroidSchedulers.mainThread());
 
         observable.subscribe(new Observer<Task>() {
@@ -312,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
         createObservableFromList();
         fromIterableWithFilter();
         justOperator();
-        rangeOperatorWithMapAndTakeWhile();
+        rangeOperatorWithMapAndTakeWhileAndRepeat();
     }
 
     @Override
