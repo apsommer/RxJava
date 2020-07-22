@@ -616,6 +616,76 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void take() {
+
+        Observable<Task> taskObservable = Observable
+                .fromIterable(DataSource.createTaskList())
+                .take(3) // emit only 3 items regardless of list size
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        taskObservable.subscribe(new Observer<Task>() {
+
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Task task) {
+                Log.d(TAG, "onNext: take(3) ... " + task.getDescription());
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    private void takeWhile() {
+
+        Observable<Task> taskObservable = Observable
+                .fromIterable(DataSource.createTaskList())
+                .takeWhile(new Predicate<Task>() { // continue emitting until predicate fails, then stop emitting
+
+                    @Override
+                    public boolean test(Task task) throws Throwable {
+                        return task.isComplete();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        taskObservable.subscribe(new Observer<Task>() {
+
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull Task task) {
+                Log.d(TAG, "onNext: takeWhile ... " + task.getDescription());
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -640,8 +710,10 @@ public class MainActivity extends AppCompatActivity {
 //        fromRetrofitUsingFlowableLiveData();
 
         // more operators
-//        filter();
-        distinct(); // use this on multiple UI clicks on same button
+//        filter(); // filter via predicate test
+//        distinct(); // use this on multiple UI clicks on same button
+//        take(); // emit only a certain number of items
+        takeWhile(); // continue emitting until predicate fails, then stop emitting
 
     }
 
