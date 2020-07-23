@@ -686,6 +686,88 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void mapTransformation() {
+
+        Observable
+                .fromIterable(DataSource.createTaskList())
+                .map(new Function<Task, String>() {
+
+                    // map applies a function to every emitted item prior to its emission
+                    // for each task in list, get its description, and only emit that string
+
+                    @Override
+                    public String apply(Task task) throws Throwable {
+                        return task.getDescription();
+                    }
+
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Observer<String>() {
+
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(@NonNull String string) {
+                Log.d(TAG, "onNext: map transformation: " + string);
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+
+        // alternatively, update the task object to complete, then emit it
+        Observable
+                .fromIterable(DataSource.createTaskList())
+                .map(new Function<Task, Task>() {
+
+                    @Override
+                    public Task apply(Task task) throws Throwable {
+                        task.setComplete(true);
+                        return task;
+                    }
+
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Task>() {
+
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        Log.d(TAG, "onSubscribe");
+                    }
+
+                    @Override
+                    public void onNext(@NonNull Task task) {
+
+                        // really strange log output here, if comment out the description print line
+                        // below, then only two tasks isComplete booleans are printed!
+                        Log.d(TAG, "task: " + task.getDescription());
+                        Log.d(TAG, "is task complete? " + task.isComplete());
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -713,8 +795,10 @@ public class MainActivity extends AppCompatActivity {
 //        filter(); // filter via predicate test
 //        distinct(); // use this on multiple UI clicks on same button
 //        take(); // emit only a certain number of items
-        takeWhile(); // continue emitting until predicate fails, then stop emitting
+//        takeWhile(); // continue emitting until predicate fails, then stop emitting
 
+        // transformation operators
+        mapTransformation();
     }
 
     @Override
