@@ -55,4 +55,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel:2.2.0" // viewmodel
     implementation "androidx.lifecycle:lifecycle-livedata:2.2.0" // livedata
     implementation "androidx.lifecycle:lifecycle-reactivestreams:2.2.0" // convert between livedata <--> flowable/publisher
+
+    // jake wharton's library for transforming ui clicks into observables
+    implementation "com.jakewharton.rxbinding3:rxbinding:3.0.0-alpha2"
 }

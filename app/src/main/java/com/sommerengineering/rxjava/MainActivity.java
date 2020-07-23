@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelProvider;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.jakewharton.rxbinding3.view.RxView;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -24,6 +26,7 @@ import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import kotlin.Unit;
 import okhttp3.ResponseBody;
 
 
@@ -768,6 +771,75 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    private void buffer() {
+
+        Observable<Task> taskObservable = Observable
+                .fromIterable(DataSource.createTaskList())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        taskObservable
+                .buffer(2)
+                .subscribe(new Observer<List<Task>>() {
+
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@NonNull List<Task> tasks) {
+                        Log.d(TAG, "onNext bundle received.");
+                        for (Task task: tasks) Log.d(TAG, task.getDescription());
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    private void bufferUi() {
+
+        RxView.clicks(findViewById(R.id.button))
+            .map(new io.reactivex.functions.Function<Unit, Integer>() { // Function class different for this library
+                @Override
+                public Integer apply(Unit unit) throws Exception {
+                    return 1;
+                }
+            })
+            .buffer(3, TimeUnit.SECONDS)
+            .observeOn(io.reactivex.android.schedulers.AndroidSchedulers.mainThread()) // Schedulers class different for this library
+            .subscribe(new io.reactivex.Observer<List<Integer>>() {
+
+                @Override
+                public void onSubscribe(io.reactivex.disposables.Disposable d) {
+
+                }
+
+                @Override
+                public void onNext(List<Integer> integers) {
+                    Log.d(TAG, "onNext: You clicked " + integers.size() + " times in 3 seconds!");
+                }
+
+                @Override
+                public void onError(Throwable e) {
+
+                }
+
+                @Override
+                public void onComplete() {
+
+                }
+            });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -798,7 +870,9 @@ public class MainActivity extends AppCompatActivity {
 //        takeWhile(); // continue emitting until predicate fails, then stop emitting
 
         // transformation operators
-        mapTransformation();
+//        mapTransformation(); // versatile function transforms item prior to emission
+        buffer(); // group items into bundle, when specified number is reached then emit bundle
+        bufferUi(); // obtain clicks on ui element over a given interval, and emit as group
     }
 
     @Override
