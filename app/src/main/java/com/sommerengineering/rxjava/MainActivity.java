@@ -963,7 +963,7 @@ public class MainActivity extends AppCompatActivity {
                 // this sacrifices speed ... although they are both on background threads, concatMap
                 // will not spawn the next thread until the previous one finished, in contrast to
                 // flatMap that fires as many as the device can handle and returns them each when done
-                .flatMap(new Function<Post, ObservableSource<Post>>() {
+                .concatMap(new Function<Post, ObservableSource<Post>>() {
 
                     @Override
                     public ObservableSource<Post> apply(Post post) throws Throwable {
@@ -1129,6 +1129,12 @@ public class MainActivity extends AppCompatActivity {
 //        debounce(); // require a time delay before a single emission
 //        throttleFirst(); // prevents spamming ui
         flatMapOrConcatMap(); // chains nested endpoint calls and flattens them into a single observable
+
+        // todo had some trouble with the final switchMap example
+        // switchMap is similar to flatMap and concatMap, except that it cancels/unsubscribes an existing
+        // observer when a new observer subscribes to the stream. This is useful if the user
+        // clicks a bunch of items quickly, but only the last click is of interest, it is safe
+        // to cancel the previous requests as only the last request is of interest.
     }
 
     @Override
