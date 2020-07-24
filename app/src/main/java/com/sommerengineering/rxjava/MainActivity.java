@@ -2,7 +2,8 @@ package com.sommerengineering.rxjava;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
-import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -12,16 +13,17 @@ import com.jakewharton.rxbinding3.view.RxView;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Scheduler;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -946,6 +948,146 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    private void flatMap() {
+
+        // a lot of extra UI components added to demonstrate this one
+        // the idea is to "flatten" multiple observables into a single observable
+
+        initializeRecycler();
+
+        getPostObservable() // single posts are being emitted from the full retrieved list
+                .subscribeOn(Schedulers.io())
+                .flatMap(new Function<Post, ObservableSource<Post>>() {
+
+                    @Override
+                    public ObservableSource<Post> apply(Post post) throws Throwable {
+                        return getPostWithCommentsObservable(post); // spawn another thread to get this post's comments
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Post>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@NonNull Post post) {
+
+                        // this post had the following life: it started in the list of posts retrieved via background,
+                        // then was emitted a single item via flatMap, the was sent to another background
+                        // thread to get its comments, and now finally this single post has comments
+                        updatePost(post);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Log.e(TAG, "onError: ", e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+
+    private Observable<Post> getPostObservable() {
+
+        // this method calls an endpoint via retrofit and returns a post observable
+        // the flatMap operator takes the returned list and emits each item as its own observable
+
+        return PostServiceGenerator.getRequestApi().getPosts()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<List<Post>, ObservableSource<Post>>() {
+                    @Override
+                    public ObservableSource<Post> apply(List<Post> posts) throws Throwable {
+
+                        // immediately put post in the ui
+                        // this is on a background thread but apparently works just fine to update the UI here!
+                        adapter.setPosts(posts);
+
+                        // this is an observable source
+                        // 100 posts are retrieved from the endpoint, using fromIterable then emits
+                        // these posts one at a time
+                        // no need to specify subscribeOn or observeOn as caller does that
+                        return Observable.fromIterable(posts);
+                    }
+                });
+    }
+
+    private void updatePost(final Post post) {
+
+        // this method will only update a single post, whatever was passed
+        // it does this by getting the full post list and filtering it for a single item via its id
+        // kind of clumsy, could use just() operator here for clarity
+
+        Observable
+                .fromIterable(adapter.getPosts())
+                .filter(new Predicate<Post>() {
+
+                    @Override
+                    public boolean test(Post p) throws Throwable {
+                        return post.getId() == p.getId();
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<Post>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@NonNull Post post) {
+                        Log.d(TAG, "onNext: updating post: " + post.getId() + ", thread: " + Thread.currentThread().getName());
+                        adapter.updatePost(post);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Log.e(TAG, "onError: ", e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    private Observable<Post> getPostWithCommentsObservable(final Post post) {
+
+        // this method gets the comments for a given post and then returns that post as an observable
+        // a map operator adds a random delay between 1 - 6 ms to simulate a real endpoint call
+        // this works because the retrofit interface returns and observable via the rxjava call adapter
+
+        return PostServiceGenerator.getRequestApi().getComments(post.getId())
+                .map(new Function<List<Comment>, Post>() {
+
+                    @Override
+                    public Post apply(List<Comment> comments) throws Throwable {
+
+                        int delay = ((new Random()).nextInt(5) + 1) * 1000; // sleep thread for x ms
+                        Thread.sleep(delay);
+                        post.setComments(comments);
+                        return post;
+                    }
+                })
+                .subscribeOn(Schedulers.io());
+    }
+
+    RecyclerAdapter adapter;
+    private void initializeRecycler() {
+        adapter = new RecyclerAdapter();
+        RecyclerView recycler = findViewById(R.id.recycler);
+        recycler.setLayoutManager(new LinearLayoutManager(this));
+        recycler.setAdapter(adapter);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -980,7 +1122,8 @@ public class MainActivity extends AppCompatActivity {
 //        buffer(); // group items into bundle, when specified number is reached then emit bundle
 //        bufferUi(); // obtain clicks on ui element over a given interval, and emit as group
 //        debounce(); // require a time delay before a single emission
-        throttleFirst(); // prevents spamming ui
+//        throttleFirst(); // prevents spamming ui
+        flatMap(); // chains nested endpoint calls and flattens them into a single observable
     }
 
     @Override

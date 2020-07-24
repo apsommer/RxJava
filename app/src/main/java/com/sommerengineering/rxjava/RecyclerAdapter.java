@@ -31,7 +31,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.Simple
 
     @Override
     public int getItemCount() {
-        return 0;
+        return posts.size();
     }
 
     public void setPosts(List<Post> posts){
