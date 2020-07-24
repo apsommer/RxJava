@@ -948,7 +948,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void flatMap() {
+    private void flatMapOrConcatMap() {
 
         // a lot of extra UI components added to demonstrate this one
         // the idea is to "flatten" multiple observables into a single observable
@@ -957,6 +957,12 @@ public class MainActivity extends AppCompatActivity {
 
         getPostObservable() // single posts are being emitted from the full retrieved list
                 .subscribeOn(Schedulers.io())
+
+                // flatMap does not maintain order, it is random
+                // simply change flatMap below to concatMap to retain order!
+                // this sacrifices speed ... although they are both on background threads, concatMap
+                // will not spawn the next thread until the previous one finished, in contrast to
+                // flatMap that fires as many as the device can handle and returns them each when done
                 .flatMap(new Function<Post, ObservableSource<Post>>() {
 
                     @Override
@@ -991,7 +997,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-
 
     private Observable<Post> getPostObservable() {
 
@@ -1123,7 +1128,7 @@ public class MainActivity extends AppCompatActivity {
 //        bufferUi(); // obtain clicks on ui element over a given interval, and emit as group
 //        debounce(); // require a time delay before a single emission
 //        throttleFirst(); // prevents spamming ui
-        flatMap(); // chains nested endpoint calls and flattens them into a single observable
+        flatMapOrConcatMap(); // chains nested endpoint calls and flattens them into a single observable
     }
 
     @Override
