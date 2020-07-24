@@ -1,6 +1,7 @@
 package com.sommerengineering.rxjava;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.os.Bundle;
@@ -840,6 +841,75 @@ public class MainActivity extends AppCompatActivity {
             });
     }
 
+    long timeSinceLastRequest = System.currentTimeMillis();
+
+    private void debounce() {
+
+        // the idea here is to delay emitting items to throttle network calls
+        // this operator will only retain the very last attempted emission
+        // for this example: do nothing until 500 milliseconds has elapsed, then emit the last emission attempted
+        // if the user keeps changing the query text at intervals less than 500 ms then nothing will ever be emitted
+
+        SearchView searchView = findViewById(R.id.searchview);
+
+        // create method is used here as it is the most flexible, here it has a nested onQueryTextChange listener
+        // allows customization of the pub process
+
+        Observable<String> observableQueryText = Observable
+                .create(new ObservableOnSubscribe<String>() {
+
+                    @Override
+                    public void subscribe(final ObservableEmitter<String> emitter) throws Exception {
+
+                        // listen for text input
+                        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+                            @Override
+                            public boolean onQueryTextSubmit(String query) {
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onQueryTextChange(final String newText) {
+
+                                if(!emitter.isDisposed()){
+                                    emitter.onNext(newText);
+                                }
+                                return false;
+                            }
+                        });
+                    }
+                })
+                .debounce(500, TimeUnit.MILLISECONDS) // apply debounce operator over 0.5 seconds
+                .subscribeOn(Schedulers.io());
+
+        // subscribe and observer
+        observableQueryText.subscribe(new Observer<String>() {
+
+            @Override
+            public void onSubscribe(Disposable d) {
+                disposables.add(d);
+            }
+
+            @Override
+            public void onNext(String s) {
+
+                Log.d(TAG, "onNext: time  since last request: " + (System.currentTimeMillis() - timeSinceLastRequest));
+                Log.d(TAG, "onNext: search query: " + s);
+                timeSinceLastRequest = System.currentTimeMillis();
+
+                // method for sending a request to the server
+            }
+            @Override
+            public void onError(Throwable e) {
+            }
+            @Override
+            public void onComplete() {
+            }
+        });
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -871,8 +941,9 @@ public class MainActivity extends AppCompatActivity {
 
         // transformation operators
 //        mapTransformation(); // versatile function transforms item prior to emission
-        buffer(); // group items into bundle, when specified number is reached then emit bundle
-        bufferUi(); // obtain clicks on ui element over a given interval, and emit as group
+//        buffer(); // group items into bundle, when specified number is reached then emit bundle
+//        bufferUi(); // obtain clicks on ui element over a given interval, and emit as group
+        debounce(); // require a time delay before a single emission
     }
 
     @Override
