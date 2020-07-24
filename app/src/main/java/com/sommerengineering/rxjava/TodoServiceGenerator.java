@@ -4,7 +4,7 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class ServiceGenerator {
+public class TodoServiceGenerator {
 
     // base url for retrofit call
     public static final String BASE_URL = "https://jsonplaceholder.typicode.com";
@@ -17,10 +17,10 @@ public class ServiceGenerator {
 
     // associate the retrofit object to the api interface (relative portion of api call)
     private static Retrofit retrofit = builder.build();
-    private static RequestApi requestApi = retrofit.create(RequestApi.class);
+    private static TodoRequestApi requestApi = retrofit.create(TodoRequestApi.class);
 
     // expose public getter
-    public static RequestApi getRequestApi() {
+    public static TodoRequestApi getRequestApi() {
         return requestApi;
     }
 }

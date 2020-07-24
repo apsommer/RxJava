@@ -6,7 +6,7 @@ import okhttp3.ResponseBody;
 import retrofit2.http.GET;
 
 // retrofit interface responsible for relative portion of api endpoint
-public interface RequestApi {
+public interface TodoRequestApi {
 
     // return endpoint response as an observable
     @GET("todos/1")

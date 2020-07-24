@@ -1,7 +1,5 @@
 package com.sommerengineering.rxjava;
 
-import android.util.Log;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.LiveDataReactiveStreams;
 
@@ -45,7 +43,7 @@ public class Repository {
 
             @Override
             public Observable<ResponseBody> call() throws Exception {
-                return ServiceGenerator.getRequestApi().makeObservableQuery();
+                return TodoServiceGenerator.getRequestApi().makeObservableQuery();
             }
         };
 
@@ -97,7 +95,7 @@ public class Repository {
 
     // execute the endpoint query and return livedata to caller
     public LiveData<ResponseBody> makeReactiveQuery() {
-        return LiveDataReactiveStreams.fromPublisher(ServiceGenerator.getRequestApi()
+        return LiveDataReactiveStreams.fromPublisher(TodoServiceGenerator.getRequestApi()
                 .makeFlowableQuery()
                 .subscribeOn(Schedulers.io()));
     }
