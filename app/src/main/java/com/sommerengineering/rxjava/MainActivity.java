@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 
 import com.jakewharton.rxbinding3.view.RxView;
 
@@ -15,6 +16,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Scheduler;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
@@ -910,6 +912,40 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void throttleFirst() {
+
+        Button button = findViewById(R.id.button);
+        timeSinceLastRequest = System.currentTimeMillis();
+
+        RxView.clicks(button)
+                .throttleFirst(2000, TimeUnit.MILLISECONDS) // 2 sec must elapse before emitting a new click from this button
+                .observeOn(io.reactivex.schedulers.Schedulers.io())
+                .subscribe(new io.reactivex.Observer<Unit>() {
+
+                    @Override
+                    public void onSubscribe(io.reactivex.disposables.Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Unit unit) {
+                        Log.d(TAG, "onNext: time since last clicked: " + (System.currentTimeMillis() - timeSinceLastRequest));
+                        timeSinceLastRequest = System.currentTimeMillis();
+                        // execute method associated with the button
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -943,7 +979,8 @@ public class MainActivity extends AppCompatActivity {
 //        mapTransformation(); // versatile function transforms item prior to emission
 //        buffer(); // group items into bundle, when specified number is reached then emit bundle
 //        bufferUi(); // obtain clicks on ui element over a given interval, and emit as group
-        debounce(); // require a time delay before a single emission
+//        debounce(); // require a time delay before a single emission
+        throttleFirst(); // prevents spamming ui
     }
 
     @Override
